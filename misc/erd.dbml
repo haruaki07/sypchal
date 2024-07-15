@@ -1,0 +1,75 @@
+Table users {
+  id integer [primary key, increment]
+  email varchar [unique, not null]
+  password varchar [not null]
+  full_name varchar [not null]
+  created_at timestamp [default: "now()"]
+  updated_at timestamp
+}
+
+Table products {
+  id integer [primary key, increment]
+  name varchar [not null]
+  description varchar [not null]
+  image_url varchar 
+  stock integer [not null]
+  price integer [not null]
+  created_at timestamp [default: "now()"]
+  updated_at timestamp
+}
+
+Table cart_items {
+  id integer [primary key, increment]
+  user_id integer [not null]
+  product_id integer [not null]
+  qty integer [not null]
+  price integer [not null]
+  created_at timestamp [default: "now()"]
+  updated_at timestamp
+}
+
+Ref: cart_items.user_id > users.id [delete: cascade, update: cascade]
+Ref: cart_items.product_id > products.id [delete: cascade, update: cascade]
+
+Enum order_status {
+  unpaid [note: "order is placed, but the customer not yet paid."]
+  paid [note: "customer paid the order"]
+}
+
+Table orders {
+  id integer [primary key, increment]
+  user_id integer [not null]
+  total_price integer [not null]
+  status order_status [not null, default: "unpaid"]
+  created_at timestamp [default: "now()"]
+  updated_at timestamp
+}
+
+Ref: orders.user_id > users.id [delete: cascade, update: cascade]
+
+Table order_items {
+  id integer [primary key, increment]
+  order_id integer [not null]
+  product_id integer
+  qty integer [not null] 
+  price integer [not null]
+  created_at timestamp [default: "now()"]
+  updated_at timestamp
+}
+
+Ref: order_items.order_id > orders.id [delete: cascade, update: cascade]
+Ref: order_items.product_id > products.id [delete: set null, update: cascade]
+
+Table payments {
+  id integer [primary key, increment]
+  order_id integer [not null, unique]
+  user_id integer [not null]
+  proof_url varchar [note: "image of transfer receipt, etc.", not null]
+  amount integer [not null]
+  method varchar [not null]
+  created_at timestamp [default: "now()"]
+  updated_at timestamp
+}
+
+Ref: payments.user_id > users.id [delete: cascade, update: cascade]
+Ref: payments.order_id - orders.id [delete: cascade, update: cascade]

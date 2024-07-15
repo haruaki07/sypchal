@@ -1,0 +1,17 @@
+services:
+  db:
+    image: postgres:alpine
+    volumes:
+      - postgres_vol:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    networks:
+      - sypchal
+    environment:
+      POSTGRES_PASSWORD: postgres
+
+networks:
+  sypchal:
+
+volumes:
+  postgres_vol:
