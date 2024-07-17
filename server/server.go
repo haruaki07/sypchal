@@ -49,6 +49,7 @@ func NewServer(config ServerConfig) (*http.Server, error) {
 	r.Post("/api/register", dependencies.UserRegister)
 	r.Post("/api/login", dependencies.UserLogin)
 	r.Get("/api/products", dependencies.ProductList)
+	r.Get("/api/products/{id:^[0-9]*$}", dependencies.ProductGet)
 	r.Get("/api/category/{category}", dependencies.ProductListByCategory)
 
 	r.Group(func(r chi.Router) {
@@ -57,8 +58,8 @@ func NewServer(config ServerConfig) (*http.Server, error) {
 		}))
 
 		r.Post("/api/products", dependencies.ProductCreate)
-		r.Put("/api/products/{id:[0-9]}", dependencies.ProductUpdate)
-		r.Delete("/api/products/{id:[0-9]}", dependencies.ProductDelete)
+		r.Put("/api/products/{id:^[0-9]*$}", dependencies.ProductUpdate)
+		r.Delete("/api/products/{id:^[0-9]*$}", dependencies.ProductDelete)
 	})
 
 	httpServer := &http.Server{

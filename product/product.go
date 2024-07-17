@@ -257,3 +257,32 @@ func (p *ProductDomain) GetProducts(ctx context.Context, req GetProductsRequest)
 
 	return
 }
+
+func (p *ProductDomain) GetProductById(ctx context.Context, id int) (product *Product, err error) {
+	product = &Product{}
+	err = p.db.QueryRow(
+		ctx,
+		`select id,name,description,image_url,category,stock,price,created_at,updated_at 
+		from products where id = $1`,
+		id,
+	).Scan(
+		&product.Id,
+		&product.Name,
+		&product.Description,
+		&product.ImageUrl,
+		&product.Category,
+		&product.Stock,
+		&product.Price,
+		&product.CreatedAt,
+		&product.UpdatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			err = ErrProductNotFound
+			return
+		}
+		return
+	}
+
+	return
+}
