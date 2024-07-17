@@ -1,14 +1,15 @@
 package main
 
 import (
+	"context"
 	"errors"
-	"net"
 	"net/http"
 
-	mdw "sypchal/middleware"
+	"sypchal/postgres"
+	"sypchal/server"
+	"sypchal/user"
+	"sypchal/validation"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/rs/zerolog/log"
 )
 
@@ -18,22 +19,28 @@ func main() {
 		log.Error().Err(err).Msg("get config")
 	}
 
-	r := chi.NewRouter()
+	ctx := context.Background()
 
-	// enable structured logging on prod
-	if config.Environment == "production" {
-		r.Use(mdw.Logger(log.Logger))
+	validator := validation.NewValidator()
+
+	db, err := postgres.NewPostgresClient(ctx, config.DatabaseUrl)
+	if err != nil {
+		log.Error().Err(err).Msg("new postgres client")
 	}
 
-	r.Use(middleware.RequestID)
-	r.Use(middleware.Recoverer)
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello World!"))
-	})
+	userDomain, err := user.NewUserDomain(db.Conn, validator)
+	if err != nil {
+		log.Error().Err(err).Msg("new user domain")
+	}
 
-	httpServer := &http.Server{
-		Addr:    net.JoinHostPort(config.Hostname, config.Port),
-		Handler: r,
+	httpServer, err := server.NewServer(server.ServerConfig{
+		Environment: config.Environment,
+		Hostname:    config.Hostname,
+		Port:        config.Port,
+		UserDomain:  userDomain,
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("new server")
 	}
 
 	log.Printf("http server listening on %s", httpServer.Addr)

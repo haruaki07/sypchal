@@ -8,6 +8,7 @@ type Config struct {
 	Environment string `envconfig:"ENVIRONMENT" default:"development"`
 	Hostname    string `envconfig:"HOSTNAME" default:"localhost"`
 	Port        string `envconfig:"PORT" default:"3000"`
+	DatabaseUrl string `envconfig:"DATABASE_URL" default:"postgres://postgres:postgres@localhost:5432/ecommerce"`
 }
 
 func GetConfig() (Config, error) {
