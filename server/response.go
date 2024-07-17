@@ -13,7 +13,7 @@ type ErrorField struct {
 
 type CommonResponse struct {
 	Data  interface{} `json:"data,omitempty"`
-	Error ErrorField  `json:"error,omitempty"`
+	Error *ErrorField `json:"error,omitempty"`
 }
 
 func (s *ServerDependency) ResponseJson(w http.ResponseWriter, data CommonResponse) {
@@ -23,13 +23,14 @@ func (s *ServerDependency) ResponseJson(w http.ResponseWriter, data CommonRespon
 
 func (s *ServerDependency) DataResponse(w http.ResponseWriter, data interface{}) {
 	s.ResponseJson(w, CommonResponse{
-		Data: data,
+		Data:  data,
+		Error: nil,
 	})
 }
 
 func (s *ServerDependency) ErrorResponse(w http.ResponseWriter, code int, message string, errors interface{}) {
 	s.ResponseJson(w, CommonResponse{
-		Error: ErrorField{
+		Error: &ErrorField{
 			Code:    code,
 			Message: message,
 			Errors:  errors,

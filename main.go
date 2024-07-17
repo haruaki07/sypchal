@@ -28,7 +28,7 @@ func main() {
 		log.Error().Err(err).Msg("new postgres client")
 	}
 
-	userDomain, err := user.NewUserDomain(db.Conn, validator)
+	userDomain, err := user.NewUserDomain(db.Conn, validator, config.JwtSecret)
 	if err != nil {
 		log.Error().Err(err).Msg("new user domain")
 	}

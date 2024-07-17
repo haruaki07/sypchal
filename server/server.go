@@ -38,7 +38,8 @@ func NewServer(config ServerConfig) (*http.Server, error) {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Recoverer)
 
-	r.Post("/api/users", dependencies.UserRegister)
+	r.Post("/api/register", dependencies.UserRegister)
+	r.Post("/api/login", dependencies.UserLogin)
 
 	httpServer := &http.Server{
 		Addr:    net.JoinHostPort(config.Hostname, config.Port),

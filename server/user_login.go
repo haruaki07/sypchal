@@ -10,27 +10,25 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type UserRegisterRequest struct {
+type UserLoginRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
-	FullName string `json:"full_name"`
 }
 
-func (s *ServerDependency) UserRegister(w http.ResponseWriter, r *http.Request) {
-	requestBody := UserRegisterRequest{}
+func (s *ServerDependency) UserLogin(w http.ResponseWriter, r *http.Request) {
+	requestBody := UserLoginRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		s.ErrorResponse(w, http.StatusBadRequest, "invalid request body", nil)
 		return
 	}
 
-	err := s.userDomain.CreateUser(r.Context(), user.CreateUserRequest{
+	accessToken, err := s.userDomain.Authenticate(r.Context(), user.AuthenticateRequest{
 		Email:    requestBody.Email,
 		Password: requestBody.Password,
-		FullName: requestBody.FullName,
 	})
 	if err != nil {
-		log.Error().Err(err).Msg("create user")
+		log.Error().Err(err).Msg("authenticate")
 
 		var ve *validation.ValidationErrors
 		if errors.As(err, &ve) {
@@ -39,9 +37,9 @@ func (s *ServerDependency) UserRegister(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		if errors.Is(err, user.ErrEmailAlreadyExists) {
+		if errors.Is(err, user.ErrWrongEmailOrPassword) {
 			w.WriteHeader(http.StatusBadRequest)
-			s.ErrorResponse(w, http.StatusBadRequest, "email is already registered", nil)
+			s.ErrorResponse(w, http.StatusBadRequest, "wrong email or password", nil)
 			return
 		}
 
@@ -50,5 +48,5 @@ func (s *ServerDependency) UserRegister(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	s.DataResponse(w, map[string]string{"access_token": accessToken})
 }
