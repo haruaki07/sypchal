@@ -12,6 +12,7 @@ Table products {
   name varchar [not null]
   description varchar [not null]
   image_url varchar 
+  category varchar
   stock integer [not null]
   price integer [not null]
   created_at timestamp [default: "now()"]

@@ -1,35 +1,33 @@
-pwd := $(shell pwd)
+DBSTRING := "host=localhost user=postgres password=postgres dbname=ecommerce sslmode=disable"
+MIGRATE := goose -dir migrations postgres $(DBSTRING)
 
-.PHONY: build dev up down
+.PHONY: all build dev up down psql migrate-create migrate-up migrate-down migrate-reset help
 
-all: dev
+all: dev # watch and run on development environment
 
-build:
-	go build . -o main
+build: # build a binary executable
+	go build -o ./tmp/main .
 
-dev: up
+dev: up # watch and run on development environment
 	air .
 
-migrate-up: up
-	migrate \
-		-database postgres://postgres:postgres@localhost:5432/ecommerce?sslmode=disable \
-		-path migrations \
-		up
+psql: # run psql
+	docker compose exec -it db psql -U postgres -d ecommerce
 
-migrate-down: up
-	migrate \
-		-database postgres://postgres:postgres@localhost:5432/ecommerce?sslmode=disable \
-		-path migrations \
-		down
+migrate-create:
+	$(MIGRATE) create $(name) sql
 
-migrate-drop: up
-	migrate \
-		-database postgres://postgres:postgres@localhost:5432/ecommerce?sslmode=disable \
-		-path migrations \
-		drop
+migrate-up:
+	$(MIGRATE) up
 
-up:
+migrate-down:
+	$(MIGRATE) down
+
+migrate-reset:
+	$(MIGRATE) reset
+
+up: # start container
 	docker compose up -d
 
-down:
+down: # stop container
 	docker compose down

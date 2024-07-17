@@ -1,4 +1,5 @@
-BEGIN;
+-- +goose Up
+-- +goose StatementBegin
 
 CREATE TYPE "order_status" AS ENUM (
   'unpaid',
@@ -80,5 +81,15 @@ ALTER TABLE "order_items" ADD FOREIGN KEY ("product_id") REFERENCES "products" (
 ALTER TABLE "payments" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE "orders" ADD FOREIGN KEY ("id") REFERENCES "payments" ("order_id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- +goose StatementEnd
 
-COMMIT;
+-- +goose Down
+-- +goose StatementBegin
+DROP TABLE "order_items";
+DROP TABLE "cart_items";
+DROP TABLE "orders";
+DROP TABLE "products";
+DROP TABLE "payments";
+DROP TABLE "users";
+DROP TYPE "order_status";
+-- +goose StatementEnd
