@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// borrowed from https://github.com/Lavalier/zchi
 // Logger is a middleware that logs incoming requests with zerolog including panics.
 func Logger(logger zerolog.Logger) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
