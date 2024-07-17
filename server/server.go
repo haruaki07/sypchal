@@ -48,6 +48,7 @@ func NewServer(config ServerConfig) (*http.Server, error) {
 
 	r.Post("/api/register", dependencies.UserRegister)
 	r.Post("/api/login", dependencies.UserLogin)
+	r.Get("/api/products", dependencies.ProductList)
 
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.BasicAuth("admin area", map[string]string{

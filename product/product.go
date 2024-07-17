@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"reflect"
 	"strconv"
 	"strings"
@@ -187,6 +188,59 @@ func (p *ProductDomain) DeleteProductById(ctx context.Context, id int) (err erro
 	if err != nil {
 		return
 	}
+
+	return
+}
+
+type ProductList []*Product
+
+type GetProductResponse struct {
+	Products ProductList `json:"products"`
+	Total    int         `json:"total"`
+	MaxPage  int         `json:"max_page"`
+}
+
+func (p *ProductDomain) GetProducts(ctx context.Context, limit int, offset int) (res *GetProductResponse, err error) {
+	rows, err := p.db.Query(
+		ctx,
+		`select id,name,description,image_url,category,stock,price,created_at,updated_at 
+		from products order by id limit $1 offset $2`,
+		limit,
+		offset,
+	)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	res = &GetProductResponse{}
+	productList := ProductList{}
+	for rows.Next() {
+		product := &Product{}
+		rows.Scan(
+			&product.Id,
+			&product.Name,
+			&product.Description,
+			&product.ImageUrl,
+			&product.Category,
+			&product.Stock,
+			&product.Price,
+			&product.CreatedAt,
+			&product.UpdatedAt,
+		)
+		productList = append(productList, product)
+	}
+
+	res.Products = productList
+
+	var total int
+	err = p.db.QueryRow(ctx, "select count(*) from products").Scan(&total)
+	if err != nil {
+		return
+	}
+
+	res.Total = total
+	res.MaxPage = int(math.Ceil(float64(total) / float64(limit)))
 
 	return
 }
