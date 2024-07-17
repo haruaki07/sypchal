@@ -194,30 +194,50 @@ func (p *ProductDomain) DeleteProductById(ctx context.Context, id int) (err erro
 
 type ProductList []*Product
 
+type GetProductFilter struct {
+	Category string
+}
+
+type GetProductsRequest struct {
+	Filter *GetProductFilter
+	Limit  int
+	Offset int
+}
+
 type GetProductResponse struct {
 	Products ProductList `json:"products"`
 	Total    int         `json:"total"`
 	MaxPage  int         `json:"max_page"`
 }
 
-func (p *ProductDomain) GetProducts(ctx context.Context, limit int, offset int) (res *GetProductResponse, err error) {
+func (p *ProductDomain) GetProducts(ctx context.Context, req GetProductsRequest) (res *GetProductResponse, err error) {
+	args := make([]interface{}, 0, 3)
+	args = append(args, req.Limit, req.Offset)
+	whereClause := ""
+
+	if req.Filter != nil && req.Filter.Category != "" {
+		whereClause = "where category=$" + strconv.Itoa(len(args)+1)
+		args = append(args, req.Filter.Category)
+	}
+
 	rows, err := p.db.Query(
 		ctx,
-		`select id,name,description,image_url,category,stock,price,created_at,updated_at 
-		from products order by id limit $1 offset $2`,
-		limit,
-		offset,
+		fmt.Sprintf(`select count(*) over(), id,name,description,image_url,category,stock,price,created_at,updated_at 
+		from products %s order by id limit $1 offset $2`, whereClause),
+		args...,
 	)
 	if err != nil {
 		return
 	}
 	defer rows.Close()
 
+	var total int
 	res = &GetProductResponse{}
 	productList := ProductList{}
 	for rows.Next() {
 		product := &Product{}
 		rows.Scan(
+			&total,
 			&product.Id,
 			&product.Name,
 			&product.Description,
@@ -232,15 +252,8 @@ func (p *ProductDomain) GetProducts(ctx context.Context, limit int, offset int) 
 	}
 
 	res.Products = productList
-
-	var total int
-	err = p.db.QueryRow(ctx, "select count(*) from products").Scan(&total)
-	if err != nil {
-		return
-	}
-
 	res.Total = total
-	res.MaxPage = int(math.Ceil(float64(total) / float64(limit)))
+	res.MaxPage = int(math.Ceil(float64(total) / float64(req.Limit)))
 
 	return
 }

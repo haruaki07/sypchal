@@ -5,10 +5,11 @@ import (
 	"strconv"
 	"sypchal/product"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 )
 
-func (s *ServerDependency) ProductList(w http.ResponseWriter, r *http.Request) {
+func (s *ServerDependency) ProductListByCategory(w http.ResponseWriter, r *http.Request) {
 	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
 	if err != nil {
 		limit = 10
@@ -19,11 +20,16 @@ func (s *ServerDependency) ProductList(w http.ResponseWriter, r *http.Request) {
 		page = 1
 	}
 
+	category := chi.URLParam(r, "category")
+
 	offset := limit * (page - 1)
 
 	res, err := s.productDomain.GetProducts(r.Context(), product.GetProductsRequest{
 		Limit:  limit,
 		Offset: offset,
+		Filter: &product.GetProductFilter{
+			Category: category,
+		},
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("get products")
