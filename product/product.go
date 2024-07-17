@@ -175,3 +175,18 @@ func (p *ProductDomain) IsProductExists(ctx context.Context, id int) bool {
 
 	return count > 0
 }
+
+func (p *ProductDomain) DeleteProductById(ctx context.Context, id int) (err error) {
+	exists := p.IsProductExists(ctx, id)
+	if !exists {
+		err = ErrProductNotFound
+		return
+	}
+
+	_, err = p.db.Exec(ctx, "delete from products where id = $1", id)
+	if err != nil {
+		return
+	}
+
+	return
+}

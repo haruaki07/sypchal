@@ -56,6 +56,7 @@ func NewServer(config ServerConfig) (*http.Server, error) {
 
 		r.Post("/api/products", dependencies.ProductCreate)
 		r.Put("/api/products/{id:[0-9]}", dependencies.ProductUpdate)
+		r.Delete("/api/products/{id:[0-9]}", dependencies.ProductDelete)
 	})
 
 	httpServer := &http.Server{
