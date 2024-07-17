@@ -3,6 +3,7 @@ package server
 import (
 	"net"
 	"net/http"
+	"sypchal/product"
 	"sypchal/user"
 
 	mdw "sypchal/middleware"
@@ -16,16 +17,23 @@ type ServerConfig struct {
 	Hostname    string
 	Port        string
 	Environment string
-	UserDomain  *user.UserDomain
+	Admin       struct {
+		Username string
+		Password string
+	}
+	UserDomain    *user.UserDomain
+	ProductDomain *product.ProductDomain
 }
 
 type ServerDependency struct {
-	userDomain *user.UserDomain
+	userDomain    *user.UserDomain
+	productDomain *product.ProductDomain
 }
 
 func NewServer(config ServerConfig) (*http.Server, error) {
 	dependencies := &ServerDependency{
-		userDomain: config.UserDomain,
+		userDomain:    config.UserDomain,
+		productDomain: config.ProductDomain,
 	}
 
 	r := chi.NewRouter()
@@ -40,6 +48,14 @@ func NewServer(config ServerConfig) (*http.Server, error) {
 
 	r.Post("/api/register", dependencies.UserRegister)
 	r.Post("/api/login", dependencies.UserLogin)
+
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.BasicAuth("admin area", map[string]string{
+			config.Admin.Username: config.Admin.Password,
+		}))
+
+		r.Post("/api/products", dependencies.ProductCreate)
+	})
 
 	httpServer := &http.Server{
 		Addr:    net.JoinHostPort(config.Hostname, config.Port),

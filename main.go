@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"sypchal/postgres"
+	"sypchal/product"
 	"sypchal/server"
 	"sypchal/user"
 	"sypchal/validation"
@@ -33,11 +34,21 @@ func main() {
 		log.Error().Err(err).Msg("new user domain")
 	}
 
+	productDomain, err := product.NewProductDomain(db.Conn, validator)
+	if err != nil {
+		log.Error().Err(err).Msg("new product domain")
+	}
+
 	httpServer, err := server.NewServer(server.ServerConfig{
 		Environment: config.Environment,
 		Hostname:    config.Hostname,
 		Port:        config.Port,
-		UserDomain:  userDomain,
+		Admin: struct {
+			Username string
+			Password string
+		}(config.Admin),
+		UserDomain:    userDomain,
+		ProductDomain: productDomain,
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("new server")
