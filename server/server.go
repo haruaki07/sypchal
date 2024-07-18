@@ -63,6 +63,7 @@ func NewServer(config ServerConfig) (*http.Server, error) {
 		r.Get("/api/category/{category}", dependencies.ProductListByCategory)
 		r.Get("/api/cart", dependencies.CartGet)
 		r.Post("/api/cart", dependencies.CartAdd)
+		r.Delete("/api/cart/{id:^[0-9]*$}", dependencies.CartDeleteItem)
 	})
 
 	r.Group(func(r chi.Router) {

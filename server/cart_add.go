@@ -74,5 +74,5 @@ func (s *ServerDependency) CartAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.Response(w, r).Status(http.StatusCreated).
-		Data(count)
+		Data(map[string]interface{}{"count": count})
 }

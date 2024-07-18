@@ -178,3 +178,44 @@ func (c *CartDomain) GetUserCart(ctx context.Context, userId int) (cart *Cart, e
 
 	return
 }
+
+type DeleteCartItemRequest struct {
+	UserId int
+	ItemId int
+}
+
+func (c *CartDomain) DeleteCartItem(ctx context.Context, req DeleteCartItemRequest) (count int, err error) {
+	var deletedId int
+	tx, err := c.db.Begin(ctx)
+	if err != nil {
+		return
+	}
+	defer tx.Rollback(ctx)
+
+	err = tx.QueryRow(
+		ctx,
+		"delete from cart_items where id=$1 and user_id=$2 returning id",
+		req.ItemId,
+		req.UserId,
+	).
+		Scan(&deletedId)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			err = ErrCartItemNotFound
+			return
+		}
+
+		return
+	}
+
+	err = tx.QueryRow(ctx, "select sum(qty) from cart_items where user_id=$1", req.UserId).Scan(&count)
+	if err != nil {
+		return
+	}
+
+	if err = tx.Commit(ctx); err != nil {
+		return
+	}
+
+	return
+}
