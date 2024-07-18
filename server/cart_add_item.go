@@ -12,13 +12,13 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type CartAddRequest struct {
+type CartAddItemRequest struct {
 	ProductId int `json:"product_id"`
 	Qty       int `json:"qty"`
 }
 
-func (s *ServerDependency) CartAdd(w http.ResponseWriter, r *http.Request) {
-	var requestBody CartAddRequest
+func (s *ServerDependency) CartAddItem(w http.ResponseWriter, r *http.Request) {
+	var requestBody CartAddItemRequest
 	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
 		s.Response(w, r).Status(http.StatusBadRequest).
 			Error(http.StatusBadRequest, "invalid request body", nil)

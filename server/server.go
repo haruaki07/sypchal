@@ -62,7 +62,7 @@ func NewServer(config ServerConfig) (*http.Server, error) {
 		r.Get("/api/products/{id:^[0-9]*$}", dependencies.ProductGet)
 		r.Get("/api/category/{category}", dependencies.ProductListByCategory)
 		r.Get("/api/cart", dependencies.CartGet)
-		r.Post("/api/cart", dependencies.CartAdd)
+		r.Post("/api/cart", dependencies.CartAddItem)
 		r.Delete("/api/cart/{id:^[0-9]*$}", dependencies.CartDeleteItem)
 		r.Put("/api/cart/{id:^[0-9]*$}", dependencies.CartUpdateItem)
 	})
