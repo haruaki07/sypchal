@@ -92,17 +92,6 @@ func (c *CartDomain) AddCartItem(ctx context.Context, req AddCartItemRequest) (c
 		return
 	}
 
-	// update product stock
-	_, err = tx.Exec(
-		ctx,
-		"update products set stock=$1 where id=$2",
-		product.Stock-req.Qty,
-		product.Id,
-	)
-	if err != nil {
-		return
-	}
-
 	err = tx.QueryRow(ctx, "select sum(qty) from cart_items where user_id=$1", req.UserId).Scan(&count)
 	if err != nil {
 		return
