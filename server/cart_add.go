@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 	"sypchal/cart"
-	prd "sypchal/product"
 	"sypchal/validation"
 
 	"github.com/go-chi/jwtauth/v5"
@@ -42,32 +41,10 @@ func (s *ServerDependency) CartAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if requestBody.ProductId == 0 {
-		s.Response(w, r).Status(http.StatusBadRequest).
-			Error(http.StatusBadRequest, "product_id is required", nil)
-		return
-	}
-
-	product, err := s.productDomain.GetProductById(r.Context(), requestBody.ProductId)
-	if err != nil {
-		log.Error().Err(err).Msg("get product by id")
-
-		if errors.Is(err, prd.ErrProductNotFound) {
-			s.Response(w, r).Status(http.StatusBadRequest).
-				Error(http.StatusBadRequest, "product not found", nil)
-			return
-		}
-
-		s.Response(w, r).Status(http.StatusInternalServerError).
-			Error(http.StatusInternalServerError, "internal server error", nil)
-		return
-	}
-
 	count, err := s.cartDomain.AddCartItem(r.Context(), cart.AddCartItemRequest{
 		UserId:    userId,
-		ProductId: product.Id,
+		ProductId: requestBody.ProductId,
 		Qty:       requestBody.Qty,
-		Price:     product.Price,
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("add cart item")
@@ -76,6 +53,18 @@ func (s *ServerDependency) CartAdd(w http.ResponseWriter, r *http.Request) {
 		if errors.As(err, &ve) {
 			s.Response(w, r).Status(http.StatusBadRequest).
 				Error(http.StatusBadRequest, "validation error", ve.Transform())
+			return
+		}
+
+		if errors.Is(err, cart.ErrProductNotFound) {
+			s.Response(w, r).Status(http.StatusBadRequest).
+				Error(http.StatusBadRequest, "product not found", nil)
+			return
+		}
+
+		if errors.Is(err, cart.ErrProductOutOfStock) {
+			s.Response(w, r).Status(http.StatusBadRequest).
+				Error(http.StatusBadRequest, "product out of stock", nil)
 			return
 		}
 

@@ -3,6 +3,7 @@ package cart
 import (
 	"context"
 	"errors"
+	"sypchal/product"
 	"sypchal/validation"
 	"time"
 
@@ -40,7 +41,6 @@ type AddCartItemRequest struct {
 	UserId    int `json:"user_id" validate:"required"`
 	ProductId int `json:"product_id" validate:"required"`
 	Qty       int `json:"qty" validate:"required"`
-	Price     int `json:"price" validate:"required"`
 }
 
 func (c *CartDomain) AddCartItem(ctx context.Context, req AddCartItemRequest) (count int, err error) {
@@ -48,21 +48,70 @@ func (c *CartDomain) AddCartItem(ctx context.Context, req AddCartItemRequest) (c
 		return
 	}
 
+	tx, err := c.db.Begin(ctx)
+	if err != nil {
+		return
+	}
+	defer tx.Rollback(ctx)
+
+	product := &product.Product{}
+	err = tx.QueryRow(
+		ctx,
+		"select id, price, stock from products where id=$1",
+		req.ProductId,
+	).Scan(
+		&product.Id,
+		&product.Price,
+		&product.Stock,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			err = ErrProductNotFound
+			return
+		}
+
+		return
+	}
+
+	if req.Qty > product.Stock {
+		err = ErrProductOutOfStock
+		return
+	}
+
 	// do upsert
-	_, err = c.db.Exec(
+	_, err = tx.Exec(
 		ctx,
 		`insert into cart_items(user_id,product_id,qty,price) values ($1,$2,$3,$4)
 		on conflict (user_id,product_id) do update set qty=excluded.qty+cart_items.qty`,
 		req.UserId,
 		req.ProductId,
 		req.Qty,
-		req.Price,
+		product.Price,
 	)
 	if err != nil {
 		return
 	}
 
-	err = c.db.QueryRow(ctx, "select sum(qty) from cart_items where user_id=$1", req.UserId).Scan(&count)
+	// update product stock
+	_, err = tx.Exec(
+		ctx,
+		"update products set stock=$1 where id=$2",
+		product.Stock-req.Qty,
+		product.Id,
+	)
+	if err != nil {
+		return
+	}
+
+	err = tx.QueryRow(ctx, "select sum(qty) from cart_items where user_id=$1", req.UserId).Scan(&count)
+	if err != nil {
+		return
+	}
+
+	// Commit the transaction.
+	if err = tx.Commit(ctx); err != nil {
+		return
+	}
 
 	return
 }
