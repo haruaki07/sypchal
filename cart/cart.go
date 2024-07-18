@@ -219,3 +219,73 @@ func (c *CartDomain) DeleteCartItem(ctx context.Context, req DeleteCartItemReque
 
 	return
 }
+
+type UpdateCartItemRequest struct {
+	UserId int
+	ItemId int
+	Qty    int `json:"qty" validate:"required"`
+}
+
+func (c *CartDomain) UpdateCartItem(ctx context.Context, req UpdateCartItemRequest) (count int, err error) {
+	if err = c.validator.ValidateStruct(req); err != nil {
+		return
+	}
+
+	tx, err := c.db.Begin(ctx)
+	if err != nil {
+		return
+	}
+	defer tx.Rollback(ctx)
+
+	var productId int
+	err = tx.QueryRow(
+		ctx,
+		"select product_id from cart_items where id=$1 and user_id=$2",
+		req.ItemId,
+		req.UserId,
+	).Scan(&productId)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			err = ErrCartItemNotFound
+		}
+
+		return
+	}
+
+	var productStock int
+	err = tx.QueryRow(
+		ctx,
+		"select stock from products where id=$1",
+		productId,
+	).Scan(&productStock)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			err = ErrProductNotFound
+			return
+		}
+
+		return
+	}
+
+	if req.Qty > productStock {
+		err = ErrProductOutOfStock
+		return
+	}
+
+	// do update
+	_, err = tx.Exec(ctx, "update cart_items set qty=$1 where id=$2", req.Qty, req.ItemId)
+	if err != nil {
+		return
+	}
+
+	err = tx.QueryRow(ctx, "select sum(qty) from cart_items where user_id=$1", req.UserId).Scan(&count)
+	if err != nil {
+		return
+	}
+
+	if err = tx.Commit(ctx); err != nil {
+		return
+	}
+
+	return
+}
