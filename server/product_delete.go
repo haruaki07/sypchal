@@ -21,15 +21,15 @@ func (s *ServerDependency) ProductDelete(w http.ResponseWriter, r *http.Request)
 		log.Error().Err(err).Msg("delete product by id")
 
 		if errors.Is(err, prd.ErrProductNotFound) {
-			w.WriteHeader(http.StatusBadRequest)
-			s.ErrorResponse(w, http.StatusBadRequest, "product not found", nil)
+			s.Response(w, r).Status(http.StatusBadRequest).
+				Error(http.StatusBadRequest, "product not found", nil)
 			return
 		}
 
-		w.WriteHeader(http.StatusInternalServerError)
-		s.ErrorResponse(w, http.StatusInternalServerError, "internal server error", nil)
+		s.Response(w, r).Status(http.StatusInternalServerError).
+			Error(http.StatusInternalServerError, "internal server error", nil)
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	s.Response(w, r).Status(http.StatusNoContent).End()
 }

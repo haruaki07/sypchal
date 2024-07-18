@@ -34,10 +34,10 @@ func (s *ServerDependency) ProductListByCategory(w http.ResponseWriter, r *http.
 	if err != nil {
 		log.Error().Err(err).Msg("get products")
 
-		w.WriteHeader(http.StatusInternalServerError)
-		s.ErrorResponse(w, http.StatusInternalServerError, "internal server error", nil)
+		s.Response(w, r).Status(http.StatusInternalServerError).
+			Error(http.StatusInternalServerError, "internal server error", nil)
 		return
 	}
 
-	s.DataResponse(w, res)
+	s.Response(w, r).Data(res)
 }

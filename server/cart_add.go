@@ -21,28 +21,30 @@ type CartAddRequest struct {
 func (s *ServerDependency) CartAdd(w http.ResponseWriter, r *http.Request) {
 	var requestBody CartAddRequest
 	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		s.ErrorResponse(w, http.StatusBadRequest, "invalid request body", nil)
+		s.Response(w, r).Status(http.StatusBadRequest).
+			Error(http.StatusBadRequest, "invalid request body", nil)
 		return
 	}
 
 	_, payload, err := jwtauth.FromContext(r.Context())
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		s.ErrorResponse(w, http.StatusInternalServerError, "internal server error", nil)
+		log.Error().Err(err).Msg("get jwt payload")
+		s.Response(w, r).Status(http.StatusInternalServerError).
+			Error(http.StatusInternalServerError, "internal server error", nil)
 		return
 	}
 
 	userId, err := strconv.Atoi(payload["uid"].(string))
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		s.ErrorResponse(w, http.StatusInternalServerError, "internal server error", nil)
+		log.Error().Err(err).Msg("atoi")
+		s.Response(w, r).Status(http.StatusInternalServerError).
+			Error(http.StatusInternalServerError, "internal server error", nil)
 		return
 	}
 
 	if requestBody.ProductId == 0 {
-		w.WriteHeader(http.StatusBadRequest)
-		s.ErrorResponse(w, http.StatusBadRequest, "product_id is required", nil)
+		s.Response(w, r).Status(http.StatusBadRequest).
+			Error(http.StatusBadRequest, "product_id is required", nil)
 		return
 	}
 
@@ -51,13 +53,13 @@ func (s *ServerDependency) CartAdd(w http.ResponseWriter, r *http.Request) {
 		log.Error().Err(err).Msg("get product by id")
 
 		if errors.Is(err, prd.ErrProductNotFound) {
-			w.WriteHeader(http.StatusBadRequest)
-			s.ErrorResponse(w, http.StatusBadRequest, "product not found", nil)
+			s.Response(w, r).Status(http.StatusBadRequest).
+				Error(http.StatusBadRequest, "product not found", nil)
 			return
 		}
 
-		w.WriteHeader(http.StatusInternalServerError)
-		s.ErrorResponse(w, http.StatusInternalServerError, "internal server error", nil)
+		s.Response(w, r).Status(http.StatusInternalServerError).
+			Error(http.StatusInternalServerError, "internal server error", nil)
 		return
 	}
 
@@ -72,18 +74,16 @@ func (s *ServerDependency) CartAdd(w http.ResponseWriter, r *http.Request) {
 
 		var ve *validation.ValidationErrors
 		if errors.As(err, &ve) {
-			w.WriteHeader(http.StatusBadRequest)
-			s.ErrorResponse(w, http.StatusBadRequest, "validation error", ve.Transform())
+			s.Response(w, r).Status(http.StatusBadRequest).
+				Error(http.StatusBadRequest, "validation error", ve.Transform())
 			return
 		}
 
-		w.WriteHeader(http.StatusInternalServerError)
-		s.ErrorResponse(w, http.StatusInternalServerError, "internal server error", nil)
+		s.Response(w, r).Status(http.StatusInternalServerError).
+			Error(http.StatusInternalServerError, "internal server error", nil)
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	s.DataResponse(w, map[string]interface{}{
-		"count": count,
-	})
+	s.Response(w, r).Status(http.StatusCreated).
+		Data(count)
 }

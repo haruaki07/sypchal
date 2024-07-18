@@ -18,8 +18,9 @@ type UserLoginRequest struct {
 func (s *ServerDependency) UserLogin(w http.ResponseWriter, r *http.Request) {
 	requestBody := UserLoginRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		s.ErrorResponse(w, http.StatusBadRequest, "invalid request body", nil)
+		s.Response(w, r).Status(http.StatusBadRequest).
+			Error(http.StatusBadRequest, "invalid request body", nil)
+
 		return
 	}
 
@@ -32,21 +33,21 @@ func (s *ServerDependency) UserLogin(w http.ResponseWriter, r *http.Request) {
 
 		var ve *validation.ValidationErrors
 		if errors.As(err, &ve) {
-			w.WriteHeader(http.StatusBadRequest)
-			s.ErrorResponse(w, http.StatusBadRequest, "validation error", ve.Transform())
+			s.Response(w, r).Status(http.StatusBadRequest).
+				Error(http.StatusBadRequest, "validation error", ve.Transform())
 			return
 		}
 
 		if errors.Is(err, user.ErrWrongEmailOrPassword) {
-			w.WriteHeader(http.StatusBadRequest)
-			s.ErrorResponse(w, http.StatusBadRequest, "wrong email or password", nil)
+			s.Response(w, r).Status(http.StatusBadRequest).
+				Error(http.StatusBadRequest, "wrong email or password", nil)
 			return
 		}
 
-		w.WriteHeader(http.StatusInternalServerError)
-		s.ErrorResponse(w, http.StatusInternalServerError, "internal server error", nil)
+		s.Response(w, r).Status(http.StatusInternalServerError).
+			Error(http.StatusInternalServerError, "internal server error", nil)
 		return
 	}
 
-	s.DataResponse(w, map[string]string{"access_token": accessToken})
+	s.Response(w, r).Data(map[string]string{"access_token": accessToken})
 }

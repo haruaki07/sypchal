@@ -25,8 +25,8 @@ func (s *ServerDependency) ProductUpdate(w http.ResponseWriter, r *http.Request)
 	productId, _ := strconv.Atoi(chi.URLParam(r, "id"))
 	requestBody := ProductUpdateRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		s.ErrorResponse(w, http.StatusBadRequest, "invalid request body", nil)
+		s.Response(w, r).Status(http.StatusBadRequest).
+			Error(http.StatusBadRequest, "invalid request body", nil)
 		return
 	}
 
@@ -40,21 +40,21 @@ func (s *ServerDependency) ProductUpdate(w http.ResponseWriter, r *http.Request)
 
 		var ve *validation.ValidationErrors
 		if errors.As(err, &ve) {
-			w.WriteHeader(http.StatusBadRequest)
-			s.ErrorResponse(w, http.StatusBadRequest, "validation error", ve.Transform())
+			s.Response(w, r).Status(http.StatusBadRequest).
+				Error(http.StatusBadRequest, "validation error", ve.Transform())
 			return
 		}
 
 		if errors.Is(err, prd.ErrProductNotFound) {
-			w.WriteHeader(http.StatusBadRequest)
-			s.ErrorResponse(w, http.StatusBadRequest, "product not found", nil)
+			s.Response(w, r).Status(http.StatusBadRequest).
+				Error(http.StatusBadRequest, "product not found", nil)
 			return
 		}
 
-		w.WriteHeader(http.StatusInternalServerError)
-		s.ErrorResponse(w, http.StatusInternalServerError, "internal server error", nil)
+		s.Response(w, r).Status(http.StatusInternalServerError).
+			Error(http.StatusInternalServerError, "internal server error", nil)
 		return
 	}
 
-	s.DataResponse(w, product)
+	s.Response(w, r).Data(product)
 }

@@ -11,15 +11,21 @@ import (
 func (s *ServerDependency) CartGet(w http.ResponseWriter, r *http.Request) {
 	_, payload, err := jwtauth.FromContext(r.Context())
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		s.ErrorResponse(w, http.StatusInternalServerError, "internal server error", nil)
+		log.Error().Err(err).Msg("get jwt payload")
+
+		s.Response(w, r).
+			Status(http.StatusInternalServerError).
+			Error(http.StatusInternalServerError, "internal server error", nil)
 		return
 	}
 
 	userId, err := strconv.Atoi(payload["uid"].(string))
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		s.ErrorResponse(w, http.StatusInternalServerError, "internal server error", nil)
+		log.Error().Err(err).Msg("atoi")
+
+		s.Response(w, r).
+			Status(http.StatusInternalServerError).
+			Error(http.StatusInternalServerError, "internal server error", nil)
 		return
 	}
 
@@ -27,10 +33,11 @@ func (s *ServerDependency) CartGet(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error().Err(err).Msg("get user cart")
 
-		w.WriteHeader(http.StatusInternalServerError)
-		s.ErrorResponse(w, http.StatusInternalServerError, "internal server error", nil)
+		s.Response(w, r).
+			Status(http.StatusInternalServerError).
+			Error(http.StatusInternalServerError, "internal server error", nil)
 		return
 	}
 
-	s.DataResponse(w, cart)
+	s.Response(w, r).Data(cart)
 }

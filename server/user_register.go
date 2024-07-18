@@ -19,8 +19,9 @@ type UserRegisterRequest struct {
 func (s *ServerDependency) UserRegister(w http.ResponseWriter, r *http.Request) {
 	requestBody := UserRegisterRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		s.ErrorResponse(w, http.StatusBadRequest, "invalid request body", nil)
+		s.Response(w, r).Status(http.StatusBadRequest).
+			Error(http.StatusBadRequest, "invalid request body", nil)
+
 		return
 	}
 
@@ -34,21 +35,21 @@ func (s *ServerDependency) UserRegister(w http.ResponseWriter, r *http.Request) 
 
 		var ve *validation.ValidationErrors
 		if errors.As(err, &ve) {
-			w.WriteHeader(http.StatusBadRequest)
-			s.ErrorResponse(w, http.StatusBadRequest, "validation error", ve.Transform())
+			s.Response(w, r).Status(http.StatusBadRequest).
+				Error(http.StatusBadRequest, "validation error", ve.Transform())
 			return
 		}
 
 		if errors.Is(err, user.ErrEmailAlreadyExists) {
-			w.WriteHeader(http.StatusBadRequest)
-			s.ErrorResponse(w, http.StatusBadRequest, "email is already registered", nil)
+			s.Response(w, r).Status(http.StatusBadRequest).
+				Error(http.StatusBadRequest, "email is already registered", nil)
 			return
 		}
 
-		w.WriteHeader(http.StatusInternalServerError)
-		s.ErrorResponse(w, http.StatusInternalServerError, "internal server error", nil)
+		s.Response(w, r).Status(http.StatusInternalServerError).
+			Error(http.StatusInternalServerError, "internal server error", nil)
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	s.Response(w, r).Status(http.StatusCreated).End()
 }
