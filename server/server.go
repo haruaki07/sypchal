@@ -56,10 +56,12 @@ func NewServer(config ServerConfig) (*http.Server, error) {
 
 	r.Group(func(r chi.Router) {
 		r.Use(jwtauth.Verifier(dependencies.userDomain.Jwt))
+		r.Use(jwtauth.Authenticator(dependencies.userDomain.Jwt))
 
 		r.Get("/api/products", dependencies.ProductList)
 		r.Get("/api/products/{id:^[0-9]*$}", dependencies.ProductGet)
 		r.Get("/api/category/{category}", dependencies.ProductListByCategory)
+		r.Get("/api/cart", dependencies.CartGet)
 		r.Post("/api/cart", dependencies.CartAdd)
 	})
 
