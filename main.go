@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 
+	"sypchal/cart"
 	"sypchal/postgres"
 	"sypchal/product"
 	"sypchal/server"
@@ -39,6 +40,11 @@ func main() {
 		log.Error().Err(err).Msg("new product domain")
 	}
 
+	cartDomain, err := cart.NewCartDomain(db.Conn, validator)
+	if err != nil {
+		log.Error().Err(err).Msg("new cart domain")
+	}
+
 	httpServer, err := server.NewServer(server.ServerConfig{
 		Environment: config.Environment,
 		Hostname:    config.Hostname,
@@ -49,6 +55,7 @@ func main() {
 		}(config.Admin),
 		UserDomain:    userDomain,
 		ProductDomain: productDomain,
+		CartDomain:    cartDomain,
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("new server")

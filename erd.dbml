@@ -27,6 +27,10 @@ Table cart_items {
   price integer [not null]
   created_at timestamp [default: "now()"]
   updated_at timestamp
+
+  indexes {
+    (user_id, product_id) [unique]
+  }
 }
 
 Ref: cart_items.user_id > users.id [delete: cascade, update: cascade]

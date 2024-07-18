@@ -24,7 +24,7 @@ type User struct {
 type UserDomain struct {
 	db        *pgx.Conn
 	validator *validation.Validator
-	jwt       *jwtauth.JWTAuth
+	Jwt       *jwtauth.JWTAuth
 }
 
 func NewUserDomain(db *pgx.Conn, validator *validation.Validator, jwtSecret string) (*UserDomain, error) {
@@ -108,7 +108,7 @@ func (u *UserDomain) Authenticate(ctx context.Context, req AuthenticateRequest) 
 		return
 	}
 
-	_, accessToken, err = u.jwt.Encode(map[string]interface{}{
+	_, accessToken, err = u.Jwt.Encode(map[string]interface{}{
 		"uid": user.Id,
 		"exp": time.Now().Add(time.Hour * 1).Unix(), // an hour
 	})
