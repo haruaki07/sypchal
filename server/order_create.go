@@ -1,8 +1,10 @@
 package server
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
+	"sypchal/order"
 
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/rs/zerolog/log"
@@ -32,6 +34,13 @@ func (s *ServerDependency) OrderCreate(w http.ResponseWriter, r *http.Request) {
 	err = s.orderDomain.PlaceOrder(r.Context(), userId)
 	if err != nil {
 		log.Error().Err(err).Msg("place order")
+
+		if errors.Is(err, order.ErrItemOutOfStock) {
+			s.Response(w, r).
+				Status(http.StatusBadRequest).
+				Error(http.StatusBadRequest, "item out of stock", nil)
+			return
+		}
 
 		s.Response(w, r).
 			Status(http.StatusInternalServerError).
