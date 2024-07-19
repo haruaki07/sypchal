@@ -32,3 +32,8 @@ PUT /api/cart/:id # update cart item quantity by item id
 POST /api/order # place an order
 POST /api/order/pay/:id # pay an order
 ```
+
+### ERD
+
+- DBML: [erd.dbml](erd.dbml)
+- Preview: https://dbdocs.io/sharylolive/sypchal?view=relationships

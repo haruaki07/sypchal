@@ -78,4 +78,4 @@ Table payments {
 }
 
 Ref: payments.user_id > users.id [delete: cascade, update: cascade]
-Ref: payments.order_id - orders.id [delete: cascade, update: cascade]
+Ref: orders.id - payments.order_id [delete: cascade, update: cascade]
