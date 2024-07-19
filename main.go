@@ -46,7 +46,7 @@ func main() {
 		log.Error().Err(err).Msg("new cart domain")
 	}
 
-	orderDomain, err := order.NewOrderDomain(db.Conn)
+	orderDomain, err := order.NewOrderDomain(db.Conn, validator)
 	if err != nil {
 		log.Error().Err(err).Msg("new order domain")
 	}

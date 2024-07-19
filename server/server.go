@@ -70,6 +70,7 @@ func NewServer(config ServerConfig) (*http.Server, error) {
 		r.Delete("/api/cart/{id:^[0-9]*$}", dependencies.CartDeleteItem)
 		r.Put("/api/cart/{id:^[0-9]*$}", dependencies.CartUpdateItem)
 		r.Post("/api/order", dependencies.OrderCreate)
+		r.Post("/api/order/pay/{pay_id:^[a-zA-Z]+$}", dependencies.OrderPay)
 	})
 
 	r.Group(func(r chi.Router) {

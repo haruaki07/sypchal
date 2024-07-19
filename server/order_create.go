@@ -31,7 +31,7 @@ func (s *ServerDependency) OrderCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.orderDomain.PlaceOrder(r.Context(), userId)
+	userOrder, err := s.orderDomain.PlaceOrder(r.Context(), userId)
 	if err != nil {
 		log.Error().Err(err).Msg("place order")
 
@@ -48,5 +48,5 @@ func (s *ServerDependency) OrderCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.Response(w, r).Status(http.StatusCreated).End()
+	s.Response(w, r).Status(http.StatusCreated).Data(userOrder)
 }
