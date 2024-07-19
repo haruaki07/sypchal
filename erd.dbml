@@ -46,6 +46,7 @@ Table orders {
   user_id integer [not null]
   total_price integer [not null]
   status order_status [not null, default: "unpaid"]
+  pay_id varchar [not null]
   created_at timestamp [default: "now()"]
   updated_at timestamp
 }

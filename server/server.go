@@ -4,6 +4,7 @@ import (
 	"net"
 	"net/http"
 	"sypchal/cart"
+	"sypchal/order"
 	"sypchal/product"
 	"sypchal/user"
 
@@ -26,12 +27,14 @@ type ServerConfig struct {
 	UserDomain    *user.UserDomain
 	ProductDomain *product.ProductDomain
 	CartDomain    *cart.CartDomain
+	OrderDomain   *order.OrderDomain
 }
 
 type ServerDependency struct {
 	userDomain    *user.UserDomain
 	productDomain *product.ProductDomain
 	cartDomain    *cart.CartDomain
+	orderDomain   *order.OrderDomain
 }
 
 func NewServer(config ServerConfig) (*http.Server, error) {
@@ -39,6 +42,7 @@ func NewServer(config ServerConfig) (*http.Server, error) {
 		userDomain:    config.UserDomain,
 		productDomain: config.ProductDomain,
 		cartDomain:    config.CartDomain,
+		orderDomain:   config.OrderDomain,
 	}
 
 	r := chi.NewRouter()
@@ -65,6 +69,7 @@ func NewServer(config ServerConfig) (*http.Server, error) {
 		r.Post("/api/cart", dependencies.CartAddItem)
 		r.Delete("/api/cart/{id:^[0-9]*$}", dependencies.CartDeleteItem)
 		r.Put("/api/cart/{id:^[0-9]*$}", dependencies.CartUpdateItem)
+		r.Post("/api/order", dependencies.OrderCreate)
 	})
 
 	r.Group(func(r chi.Router) {
