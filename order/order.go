@@ -154,7 +154,7 @@ func (o *OrderDomain) PlaceOrder(ctx context.Context, userId int) (order *Order,
 	// update products stock
 	b := &pgx.Batch{}
 	for _, item := range items {
-		q := `update products set stock=stock-$1 where id=$2`
+		q := `update products set stock=stock-$1,updated_at=now() where id=$2`
 		b.Queue(q, item.Qty, item.ProductId)
 	}
 	if err = tx.SendBatch(ctx, b).Close(); err != nil {
@@ -239,7 +239,7 @@ func (o *OrderDomain) PayOrder(ctx context.Context, userId int, req PayOrderRequ
 		return
 	}
 
-	_, err = tx.Exec(ctx, "update orders set status=$1 where id=$2", OrderStatusPaid, req.OrderId)
+	_, err = tx.Exec(ctx, "update orders set status=$1,updated_at=now() where id=$2", OrderStatusPaid, req.OrderId)
 	if err != nil {
 		return
 	}

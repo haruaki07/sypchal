@@ -273,7 +273,7 @@ func (c *CartDomain) UpdateCartItem(ctx context.Context, req UpdateCartItemReque
 	}
 
 	// do update
-	_, err = tx.Exec(ctx, "update cart_items set qty=$1 where id=$2", req.Qty, req.ItemId)
+	_, err = tx.Exec(ctx, "update cart_items set qty=$1,updated_at=now() where id=$2", req.Qty, req.ItemId)
 	if err != nil {
 		return
 	}

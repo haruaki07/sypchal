@@ -146,7 +146,7 @@ func (p *ProductDomain) UpdateProductById(ctx context.Context, id int, req Updat
 	err = p.db.QueryRow(
 		ctx,
 		fmt.Sprintf(
-			`update products set %s where id = $%d
+			`update products set %s,updated_at=now() where id = $%d
 			returning id,name,description,image_url,category,stock,price,created_at,updated_at`,
 			strings.Join(fields, ","),
 			len(args),
