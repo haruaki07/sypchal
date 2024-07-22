@@ -32,6 +32,14 @@ func NewUserDomain(db *pgx.Conn, validator *validation.Validator, jwtSecret stri
 		return nil, fmt.Errorf("db is nil")
 	}
 
+	if validator == nil {
+		return nil, fmt.Errorf("validator is nil")
+	}
+
+	if jwtSecret == "" {
+		return nil, fmt.Errorf("jwtSecret is nil")
+	}
+
 	jwt := jwtauth.New("HS256", []byte(jwtSecret), nil)
 
 	return &UserDomain{db, validator, jwt}, nil
@@ -87,6 +95,10 @@ type AuthenticateRequest struct {
 }
 
 func (u *UserDomain) Authenticate(ctx context.Context, req AuthenticateRequest) (accessToken string, err error) {
+	if err = u.validator.ValidateStruct(req); err != nil {
+		return
+	}
+
 	user := User{}
 	err = u.db.QueryRow(
 		ctx,

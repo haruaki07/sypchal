@@ -11,6 +11,9 @@ build: # build a binary executable
 dev: up # watch and run on development environment
 	air .
 
+test:
+	go test -v ./...
+
 psql: # run psql
 	docker compose exec -it db psql -U postgres -d ecommerce
 

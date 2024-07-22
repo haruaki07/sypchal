@@ -5,6 +5,7 @@
 ```shell
 $ make # watch and run on development environment
 $ make build # build an executable binary
+$ make test # run all test
 
 $ make psql # connect to database with psql
 
